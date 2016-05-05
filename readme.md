@@ -6,7 +6,7 @@ Package containig library for sending notifications from server to client.
 
 1. `sudo apt-get install cmake`
 
-2. `makedir build`
+2. `mkdir build`
 
 3. `cd build`
 
