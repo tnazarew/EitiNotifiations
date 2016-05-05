@@ -37,7 +37,7 @@ namespace EitiNotifications
 
     Socket::~Socket()
     {
-	//closeSocket();
+
     }
 
     void Socket::bindSocket()
@@ -95,23 +95,20 @@ namespace EitiNotifications
     int Socket::readMes(std::string& mes)
     {
         int long bytes;
-	static int count = 0;
         mes.clear();
-        const int size = 7;
+        const int size = 10;
 
         do
         {
             char buf[size] = {0};
             bytes = read(socket_descriptor_,buf, size);
-            mes.append(buf, 7);
+            mes.append(buf, 10);
             if(bytes == -1)
             {
                 perror("READ");
                 mes.clear();
                 return -1;
             }
-	count+=bytes;
-	std::cout << "..count: " << count << ", bytes: " << bytes << std::endl;
         }while(bytes == size);
         return 0;
 
@@ -119,7 +116,7 @@ namespace EitiNotifications
 
     int Socket::writeMes(const std::string& mes)
     {
-        send(socket_descriptor_, mes.c_str(), mes.size(), 0);
+        write(socket_descriptor_, mes.c_str(), mes.size());
     }
 
 
