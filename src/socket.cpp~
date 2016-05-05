@@ -97,13 +97,13 @@ namespace EitiNotifications
         int long bytes;
 	static int count = 0;
         mes.clear();
-        const int size = 7;
+        const int size = 10;
 
         do
         {
             char buf[size] = {0};
             bytes = read(socket_descriptor_,buf, size);
-            mes.append(buf, 7);
+            mes.append(buf, 10);
             if(bytes == -1)
             {
                 perror("READ");
