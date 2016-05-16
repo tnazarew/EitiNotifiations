@@ -3,6 +3,7 @@
 //
 #include <socket.h>
 #include <unistd.h>
+#include <string.h>
 
 
 namespace EitiNotifications
@@ -19,13 +20,16 @@ namespace EitiNotifications
         socket_adress_.sin_addr.s_addr = htonl(INADDR_ANY);
         socket_adress_.sin_port = htons(port_);
         adress_length_ = sizeof(socket_adress_);
+        socket_type_ = sock_type::SERVER;
+        socket_descriptor_ = socket(FAMILY, TYPE, 0);
+        assert(socket_descriptor_ >= 0);
+        bindSocket();
+
     }
 
     int Socket::setDescriptor()
     {
-        socket_descriptor_ = socket(FAMILY, TYPE, 0);
-        assert(socket_descriptor_ >= 0);
-        bindSocket();
+
     }
     Socket::Socket(sin_addr addr, int desc)
     {
@@ -33,11 +37,16 @@ namespace EitiNotifications
         socket_adress_ = addr;
         socket_descriptor_ = desc;
 
+        socket_type_ = sock_type::CLIENT;
     }
 
     Socket::~Socket()
     {
-	//closeSocket();
+
+        if(socket_type_ == sock_type::SERVER)
+            perror("SERVER IS BEING CLOSED");
+        closeSocket();
+
     }
 
     void Socket::bindSocket()
@@ -50,7 +59,7 @@ namespace EitiNotifications
     }
 
 
-    bool Socket::acceptSocket(ClientSocket& client)
+    bool Socket::acceptSocket(ClientSocket* &client)
     {
         int b;
         b = listen(socket_descriptor_, backlog_);
@@ -65,7 +74,7 @@ namespace EitiNotifications
             perror("ACCEPT");
             return false;
         }
-        client = Socket(*((sin_addr*)s), listener_sock);
+        client = new Socket(*((sin_addr*)s), listener_sock);
         delete s;
         return true;
     }
@@ -73,12 +82,9 @@ namespace EitiNotifications
     void Socket::closeSocket()
     {
         close(socket_descriptor_);
+
     }
 
-    void Socket::closeSocket(int socket)
-    {
-        close(socket);
-    }
 
     int Socket::getSocket()
     {
@@ -92,34 +98,45 @@ namespace EitiNotifications
 
 
 
-    int Socket::readMes(std::string& mes)
+    int Socket::readMes(char* mes, int& mes_size, int& devID, int& action)
     {
-        int long bytes;
-	static int count = 0;
-        mes.clear();
         const int size = 7;
-
-        do
+        int long bytes;
+        char * header;
+        header = new char[12];
+        bytes = read(socket_descriptor_, header, 3*sizeof(int));
+        if(bytes == 12)
         {
-            char buf[size] = {0};
-            bytes = read(socket_descriptor_,buf, size);
-            mes.append(buf, 7);
-            if(bytes == -1)
+            mes_size = *((int *) header);
+            devID = *((int *) (header + 1));
+            action = *((int *) (header + 2));
+            mes = new char[mes_size];
+            int offset = 0;
+            do
             {
-                perror("READ");
-                mes.clear();
-                return -1;
-            }
-	count+=bytes;
-	std::cout << "..count: " << count << ", bytes: " << bytes << std::endl;
-        }while(bytes == size);
-        return 0;
-
+                bytes = read(socket_descriptor_, mes + offset, size);
+                offset += bytes;
+                if (bytes == -1) {
+                    perror("READ");
+                    return -1;
+                }
+            } while (offset < mes_size);
+            return 0;
+        }
+        else
+        {
+            perror("READ HEADER");
+                    return -1;
+        }
     }
 
-    int Socket::writeMes(const std::string& mes)
+    int Socket::writeMes(const char* mes, const int& size)
     {
-        send(socket_descriptor_, mes.c_str(), mes.size(), 0);
+        char *buf;
+        buf = new char[4+size];
+        *((int*)buf) = size;
+        memcpy(buf+4, mes, (size_t)size);
+        send(socket_descriptor_, mes, (size_t)size+4, 0);
     }
 
 
