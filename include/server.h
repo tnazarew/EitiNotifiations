@@ -9,6 +9,9 @@
 #include <iostream>
 #include <vector>
 #include <boost/thread.hpp>
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
 
 namespace EitiNotifications
 {
@@ -16,17 +19,21 @@ namespace EitiNotifications
     {
     private:
         int port_;
+        bool main_thread_;
         bool running;
         s_addr server_addr_;
-        Socket main_socket_;
+        Socket* main_socket_;
         std::vector<Socket> sockets_;
 
         void getConfig(std::vector<std::string>&);
         void closeAll();
-        void readAndAnswer(Socket&);
+
     public:
+        void readAndAnswer(Socket*);
         Server();
         ~Server();
+        Server(const Server&);
+
         int runServer();
         int reconfigure(std::string, int);
         int stopServer();

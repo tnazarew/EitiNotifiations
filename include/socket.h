@@ -28,19 +28,19 @@ namespace EitiNotifications
         int backlog_;
         sin_addr socket_adress_;
         int adress_length_;
-
     public:
         typedef Socket ClientSocket;
         Socket();
         Socket(int, sock_type, unsigned short);
         Socket(sin_addr, int);
         ~Socket();
+
         void bindSocket();
         void setPort();
         void connect(int, std::string);
-        int readMes(std::string&);
-        int writeMes(const std::string&);
-        bool acceptSocket(ClientSocket&);
+        int readMes(char *, int&, int&, int&);
+        int writeMes(const char *, const int&);
+        bool acceptSocket(ClientSocket*&);
         void closeSocket();
         void closeSocket(int);
         int getSocket();
