@@ -1,4 +1,4 @@
-#include "Util.h"
+#include <Util.h>
 
 void Util::uint32ToHEX(unsigned var, unsigned char hvar[8])
 {
@@ -35,7 +35,7 @@ void Util::UintToChar(unsigned var,char hvar[4])
 	hvar[0] = a&0xFF; //a >>= 8;
 }
 
-void Util::CharToUint(char hvar[4], unsigned& var)
+void Util::CharToUint(const char hvar[4], unsigned& var)
 {
 	var = 0;
 	var |= (hvar[0]&0xFF); var <<= 8;

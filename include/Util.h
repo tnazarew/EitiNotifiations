@@ -12,6 +12,6 @@ public:
 	//
 	static void UintToChar(unsigned var, char hvar[4]);
 
-	static void CharToUint(char hvar[4], unsigned& var);
+	static void CharToUint(const char hvar[4], unsigned& var);
 };
 #endif // UTIL_H

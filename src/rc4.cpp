@@ -1,6 +1,6 @@
 #include <string.h>
 #include <string>
-#include "rc4.h"
+#include <rc4.h>
 
 void RC4::encrypt(const char * ByteInput, char * pwd, char* &ByteOutput)
 {

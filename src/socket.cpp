@@ -110,6 +110,8 @@ namespace EitiNotifications
             mes_size = *((int *) header);
             devID = *((int *) (header + 1));
             action = *((int *) (header + 2));
+			if(mes_size<0) mes_size = 1;
+			if(mes_size>1500) mes_size = 1500;
             mes = new char[mes_size];
             int offset = 0;
             do
@@ -136,7 +138,7 @@ namespace EitiNotifications
         buf = new char[4+size];
         *((int*)buf) = size;
         memcpy(buf+4, mes, (size_t)size);
-        send(socket_descriptor_, mes, (size_t)size+4, 0);
+        send(socket_descriptor_, buf, (size_t)size+4, 0);
     }
 
 
