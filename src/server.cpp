@@ -2,6 +2,9 @@
 // Created by tomasz on 01.05.16.
 //
 #include <server.h>
+#include <RSA.h>
+#include <string.h>
+#define REGISTER_REQUEST 1
 
 
 
@@ -19,6 +22,7 @@ namespace EitiNotifications
             perror("Destructor is called");
             delete main_socket_;
         }
+
 
     }
 
@@ -54,13 +58,26 @@ namespace EitiNotifications
     {
         char * mes;
         int size, devID, action;
+	rapidjson::Document d;
+        const char* json = "{\"message\":\"Never Gonna Give You Up\"}";
+        d.Parse(json);
         if(listener->readMes(mes, size, devID, action) == 0)
         {
+            if(action == REGISTER_REQUEST)
+            {
+                const char * someKey = "ABCDEFGH";
+                char * encryptedSymKey = '\0';
+                int ksize;
+                    RSA * asym = new RSA();
+                    asym->getPublicKey(mes);
+                asym->encryptWithPPKey(someKey, encryptedSymKey);
+                ksize = strlen(encryptedSymKey);
+                listener->writeMes(encryptedSymKey, ksize);
+                // push back (devID, std::string(someKey)
+                delete asym;
+            }
 
-            rapidjson::Document d;
-            const char* json = "{\"message\":\"Never Gonna Give You Up\"}";
-            d.Parse(json);
-            if(d.HasMember("message") && std::string(d["message"].GetString()) == "Never Gonna Give You Up")
+            else if(d.HasMember("message") && std::string(d["message"].GetString()) == "Never Gonna Give You Up")
             {
 
                 char res[] = "{\"message\":\"Never Gonna Let You Down\"}";

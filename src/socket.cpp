@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <string.h>
 
+#include <actions.h>
+
 
 namespace EitiNotifications
 {
