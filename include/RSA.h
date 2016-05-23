@@ -17,6 +17,10 @@
 
 			unsigned partner_e;
 			unsigned partner_n;
+
+			/*struct crypt_arg
+			{
+				const char */
 				
 			// Sprawdza czy NWD dla liczb a i b jest równy 1
 			static bool gcd_1(unsigned a, unsigned b);
@@ -29,7 +33,7 @@
 			// Miller Rabin test
 			static bool is_prime(unsigned prime);
 			// 
-			void crypt(const char * given, char * &out, unsigned power, unsigned modul);
+			static void crypt(const char * given, char * &out, unsigned power, unsigned modul, int len=0);
 			//void crypt(unsigned sorce, char * &out, unsigned power, unsigned modul);
 			//void crypt1(const char * source, char * out, unsigned power, unsigned modul, int len); // length in bytes
 			//void crypt1(unsigned sorce, char * out, unsigned power, unsigned modul);
@@ -44,13 +48,14 @@
 			static unsigned decrypt(char * source);
 			static unsigned decrypt(unsigned source);
 			// szyfruj kluczem partnera
-			void encryptWithPPKey(const char * source, char * &out);
+			void encryptWithPPKey(const char * source, char * &out, int len=0);
 			//
-			void decrypt(char * source, char * &out);
+			static void decrypt(const char * source, char * &out, int len=0);
 			// 
 			void getPublicKey(char ee[8]);
 			// 
 			static void pushPublicKey(char * out);
+			static void pullPublicKey(char * out);
 		
 
 	};

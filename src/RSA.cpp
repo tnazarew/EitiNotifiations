@@ -4,114 +4,15 @@
 #include <random>
 #include <cstdlib>
 #include <iostream>
+#define CLIENT
 
 unsigned RSA::e; // składowa klucza publicznego
 unsigned RSA::d; // składowa klucza prywatnego
 unsigned RSA::n;
 bool RSA::keyGenerated = false;
 
-unsigned RSA::encrypt(unsigned given)
-{
-	return ModExp(given,e,n);
-}
-
-/*unsigned RSA::decrypt(char * given)
-{
-	return ModExp(given,d,n);
-}*/
-RSA::RSA()
-{
-#ifdef CLIENT
-	partner_n = 4294894073U;
-	partner_e = 981967781U;
-#endif
-}
-
-void RSA::encryptWithPPKey(const char * source, char * &out)
-{
-	crypt(source, out, partner_e, partner_n);
-}
-
-void RSA::crypt(const char * given, char * &out, unsigned power, unsigned modul)
-{
-	int len = strlen(given);
-	int padding=0;
-	if(len%4!=0) padding = 4 -len%4;
-	char * buf = new char[len+padding];
-	strcpy(buf, given);
-	for(int i=0; i<padding; ++i)
-	{
-		buf[len+i] = 0;
-	}
-	int i = (len+padding)/4;
-	unsigned * arr = new unsigned[i];
-	char * hhh = new char[len+padding];
-	unsigned temp;
-	for(int k=0; k<i; ++k)
-	{
-		arr[k] = 0;
-		Util::CharToUint(given+4*k, arr[k]);
-		temp = ModExp(arr[k], power, modul);
-		Util::UintToChar(temp, hhh+k*4);
-	}
-	out = hhh;
-}
-
-/*void RSA::crypt1(char * given, char * out, unsigned power, unsigned modul, int len)
-{
-	int i = len/4;
-	unsigned * arr = new unsigned[i];
-	unsigned temp;
-	for(int k=0; k<i; ++k)
-	{
-		arr[k] = 0;
-		Util::CharToUint(given+4*k, arr[k]);
-		temp = ModExp(arr[k], power, modul);
-		Util::UintToChar(temp, out+k*4);
-	}
-}*/
-
-/*void RSA::crypt(unsigned given, char * &out, unsigned power, unsigned modul)
-{
-	char * hhh = new char[4];
-	unsigned temp;
-	temp = ModExp(given, power, modul);
-	Util::UintToChar(temp, hhh);
-	out = hhh;
-}*/
-
-/*void RSA::crypt1(unsigned given, char * out, unsigned power, unsigned modul)
-{
-	unsigned temp;
-	temp = ModExp(given, power, modul);
-	Util::UintToChar(temp, out);
-}*/
-
-
-void RSA::getPublicKey(char * str)
-{
-	Util::CharToUint(str, partner_e);
-	Util::CharToUint((str+4), partner_n);
-}
-
-void RSA::pushPublicKey(char * out)
-{
-	Util::UintToChar(e, out);
-	Util::UintToChar(n, out+4);
-}
-
-
-
-
 void RSA::generate()
 {
-#ifndef CLIENT
-	n = 4294894073U;
-	e = 981967781U;
-	d = 2245171601U;
-	return;
-#endif
-
 	while(1){
 		unsigned p, q = 1;
 		unsigned long long mul;
@@ -124,8 +25,6 @@ void RSA::generate()
 		std::uniform_int_distribution<unsigned> e_key(e_lower_bound,e_upper_bound);
 		do{ // generate pseudorandom p and q
 			p = pq(gen);
-			//if(!p&1) ++p;
-			//if(p%2==0) ++p;
 			p|=1;
 			
 			while(!is_prime(p)) p+=2;
@@ -154,15 +53,15 @@ void RSA::generate()
 		// find inversion of e in field phi - d
 		d = getInverse(e, phi);
 		// some output and testing;
-		std::cout<<"p = " << p << ", \tq = " << q << ", \tn = " << n << std::endl;
-		std::cout<<"e = " << e << ", d = " << d <<", phi = " << phi << std::endl;
+		
 		// since this place p q phi are used as temporary variables
 		// start testing the key
-		p=201;
-		q=ModExp(p,e,n);
-		phi=ModExp(q,d,n);
+		unsigned pp, qq, hh;
+		pp=201;
+		qq=ModExp(pp,e,n);
+		hh=ModExp(qq,d,n);
 	
-		if(p!=phi)
+		if(pp!=hh)
 		{
 			std::cout<<"Wrong!" << std::endl;
 			continue;
@@ -171,30 +70,133 @@ void RSA::generate()
 		// test rsa key
 		for(unsigned i=1; i<=10; i++)
 		{
-			p+=p*i;
-			q=ModExp(p,e,n);
-			phi=ModExp(q,d,n);
+			pp+=pp*i;
+			qq=ModExp(pp,e,n);
+			hh=ModExp(qq,d,n);
 	
-			if(p!=phi) break;
+			if(pp!=hh) break;
 		}
-		if(p!=phi) continue;
-		else break;
-		break;
+		if(pp!=hh) continue;
+		else
+			{
+				std::cout<<"p = " << p << ", \tq = " << q << ", \tn = " << n << std::endl;
+				std::cout<<"e = " << e << ", d = " << d <<", phi = " << phi << std::endl;
+				break;
+		}
 	}
 
-	keyGenerated = true;
 }
 
-/*void RSA::getPublicKey(unsigned char * ee, unsigned char * nn)
+/*
+ * Miller Rabin pseudorandom test as described on page 8 at:
+ * http://cacr.uwaterloo.ca/hac/about/chap4.pdf
+ */
+bool RSA::is_prime(unsigned n)
 {
-	Util::uint32ToHEX(e, ee);
-	Util::uint32ToHEX(n, nn);
-}*/
-
-bool RSA::isKeyGenerated()
-{
-	return keyGenerated;
+	int t = 2;
+	unsigned s = 0;
+	unsigned n_1 = n-1;
+	unsigned r = n_1;
+	unsigned y, a;
+	// check https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants
+	// if n < 1,373,653, it is enough to test a = 2 and 3
+	unsigned a_array[] = {2, 3};
+	// 1. Write n-1 = 2^s*r such that r is odd
+	while(!r&1) // do when r is even
+	{
+		++s;
+		r>>=1;
+	}
+	// 2. For i from 1 to t do the following
+	for(int i = 0; i<t; ++i)
+	{
+		// Choose a random integer a, 2<=a<=n-2
+		// select a from a_array
+		a = a_array[i];
+		// Compute  y = a^r mod n
+		y = ModExp(a,r,n);
+		if(y!=1 && y!=n_1)
+		{
+			for(unsigned j = 1; j<s && y!=n_1; ++j)
+			{
+				//y = y^2 mod n;
+				y = ModExp(y,2,n);
+				if(y==1) return false;
+			}
+			if(y!=n_1) return false;
+		}
+	}
+	// 3. Miller-Rabin probabilistic primality test passed
+	return true;
 }
+
+unsigned RSA::encrypt(unsigned given)
+{
+	return ModExp(given,e,n);
+}
+
+RSA::RSA()
+{
+}
+
+void RSA::encryptWithPPKey(const char * source, char * &out, int len)
+{
+	if(len>0)
+		crypt(source, out, partner_e, partner_n, len);
+	else crypt(source, out, partner_e, partner_n, len);
+}
+
+void RSA::decrypt(const char * input, char *& out, int len)
+{
+	if(len>0)
+		crypt(input, out, d, n, len);
+	else crypt(input, out, d, n);
+}
+
+void RSA::crypt(const char * given, char * &out, unsigned power, unsigned modul, int len)
+{
+	if(len<=0)
+		len = strlen(given);
+	int padding=0;
+	if(len%4!=0) padding = 4 -len%4;
+	const int flen = len+padding;
+	char * buf = new char[flen];
+	for(int yu=0; yu < len; ++yu)
+	{
+		buf[yu] = given[yu];
+	}
+	for(int yu=len; yu<flen; ++yu)
+	{
+		buf[yu] = '\0';
+	}
+	
+	/*int i = (flen)/4;*/ int i = len/4;
+	unsigned * arr = new unsigned[i];
+	char * hhh = new char[flen+1];
+	for(int k=0; k<i; ++k)
+	{
+		arr[k] = *((unsigned*)(given+k*4));
+		*((unsigned*)(hhh+k*4)) = ModExp(arr[k], power, modul);
+	}
+	hhh[flen] = '\0';
+	out = hhh;
+}
+
+
+void RSA::getPublicKey(char * str)
+{
+	partner_e = *((unsigned*)str);
+	partner_n = *((unsigned*)(str+4));
+}
+
+void RSA::pushPublicKey(char * out)
+{
+	*((unsigned*)out) = e;
+	*((unsigned*)(out+4)) = n;
+}
+
+
+
 
 unsigned RSA::getInverse(unsigned b, unsigned m)
 {
@@ -242,48 +244,6 @@ bool RSA::gcd_1(unsigned a, unsigned b)
 	return (a == 1);
 }
 
-/*
- * Miller Rabin pseudorandom test as described on page 8 at:
- * http://cacr.uwaterloo.ca/hac/about/chap4.pdf
- */
-bool RSA::is_prime(unsigned n)
-{
-	int t = 2;
-	unsigned s = 0;
-	unsigned n_1 = n-1;
-	unsigned r = n_1;
-	unsigned y, a;
-	// check https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants
-	// if n < 1,373,653, it is enough to test a = 2 and 3
-	unsigned a_array[] = {2, 3};
-	// 1. Write n-1 = 2^s*r such that r is odd
-	while(!r&1) // do when r is even
-	{
-		++s;
-		r>>=1;
-	}
-	// 2. For i from 1 to t do the following
-	for(int i = 0; i<t; ++i)
-	{
-		// Choose a random integer a, 2<=a<=n-2
-		// select a from a_array
-		a = a_array[i];
-		// Compute  y = a^r mod n
-		y = ModExp(a,r,n);
-		if(y!=1 && y!=n_1)
-		{
-			for(unsigned j = 1; j<s && y!=n_1; ++j)
-			{
-				//y = y^2 mod n;
-				y = ModExp(y,2,n);
-				if(y==1) return false;
-			}
-			if(y!=n_1) return false;
-		}
-	}
-	// 3. Miller-Rabin probabilistic primality test passed
-	return true;
-}
 
 /* This function calculates (a^b)%c */
 unsigned RSA::ModExp(unsigned a,unsigned b,unsigned c){

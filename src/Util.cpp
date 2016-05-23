@@ -1,6 +1,6 @@
 #include <Util.h>
 
-void Util::uint32ToHEX(unsigned var, unsigned char hvar[8])
+void Util::uint32ToHEX(unsigned var, char hvar[8])
 {
 	unsigned v = var;
 	unsigned b = 0xFU;
@@ -13,7 +13,7 @@ void Util::uint32ToHEX(unsigned var, unsigned char hvar[8])
 	}
 }
 
-void Util::hexToUint32(unsigned char hvar[8], unsigned& var)
+void Util::hexToUint32(char hvar[8], unsigned& var)
 {
 	var=0;
 	for(int  i = 0; i < 7; ++i)
