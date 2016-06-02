@@ -98,7 +98,7 @@ namespace EitiNotifications
 
 
 
-    int Socket::readMes(char* mes, int& mes_size, int& devID, int& action)
+    int Socket::readMes(char*& mes, int& mes_size, int& devID, int& action)
     {
         const int size = 7;
         int long bytes;
@@ -108,10 +108,13 @@ namespace EitiNotifications
         if(bytes == 12)
         {
             mes_size = *((int *) header);
-            devID = *((int *) (header + 1));
-            action = *((int *) (header + 2));
+            devID = *((int *) (header + 4));
+            action = *((int *) (header + 8));
 			if(mes_size<0) mes_size = 1;
 			if(mes_size>1500) mes_size = 1500;
+		std::cout << "mes_size = " << mes_size << std::endl;
+		std::cout << "devID = " << devID << std::endl;
+		std::cout << "action = " << action << std::endl;
             mes = new char[mes_size];
             int offset = 0;
             do

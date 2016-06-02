@@ -5,7 +5,7 @@
 #include <RSA.h>
 #include <string.h>
 #define REGISTER_REQUEST 1
-
+//#define 
 
 
 namespace EitiNotifications
@@ -68,7 +68,9 @@ namespace EitiNotifications
 		char * encryptedSymKey = '\0';
 		int ksize;
 	        RSA * asym = new RSA();
-	        asym->getPublicKey(mes);
+	        asym->getPartnerPublicKey(mes);
+		std::cout << "Pe = " << *((unsigned*)(mes)) << std::endl;
+		std::cout << "Pn = " << *((unsigned*)(mes+4)) << std::endl;
 		asym->encryptWithPPKey(someKey, encryptedSymKey);
 		ksize = strlen(encryptedSymKey);
 		listener->writeMes(encryptedSymKey, ksize);
