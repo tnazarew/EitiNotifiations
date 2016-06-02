@@ -4,15 +4,61 @@
 #include <random>
 #include <cstdlib>
 #include <iostream>
-#define CLIENT
 
 unsigned RSA::e; // składowa klucza publicznego
 unsigned RSA::d; // składowa klucza prywatnego
 unsigned RSA::n;
-bool RSA::keyGenerated = false;
+
+RSA::RSA()
+{
+/*
+#ifdef CLIENT
+	partner_n = 4294894073U;
+	partner_e = 981967781U;
+#endif
+*/
+}
+
+unsigned RSA::encrypt(unsigned given)
+{
+	return ModExp(given,e,n);
+}
+
+unsigned RSA::decrypt(unsigned given)
+{
+	return ModExp(given,d,n);
+}
+
+unsigned RSA::encryptWithPPKey(unsigned given)
+{
+	return ModExp(given,partner_e,partner_n);
+}
+
+void RSA::encrypt(const char * input, char *& output, int len)
+{
+	crypt(input, output, e, n, len);
+}
+
+void RSA::decrypt(const char * input, char *& output, int len)
+{
+	crypt(input, output, d, n, len);
+}
+
+void RSA::encryptWithPPKey(const char * source, char * &output, int len)
+{
+	crypt(source, output, partner_e, partner_n, len);
+}
 
 void RSA::generate()
 {
+/*
+#ifndef CLIENT
+	n = 4294894073U;
+	e = 981967781U;
+	d = 2245171601U;
+	return;
+#endif 
+*/
 	while(1){
 		unsigned p, q = 1;
 		unsigned long long mul;
@@ -63,7 +109,7 @@ void RSA::generate()
 	
 		if(pp!=hh)
 		{
-			std::cout<<"Wrong!" << std::endl;
+			//std::cout<<"Wrong!" << std::endl;
 			continue;
 		}
 		
@@ -130,29 +176,6 @@ bool RSA::is_prime(unsigned n)
 	return true;
 }
 
-unsigned RSA::encrypt(unsigned given)
-{
-	return ModExp(given,e,n);
-}
-
-RSA::RSA()
-{
-}
-
-void RSA::encryptWithPPKey(const char * source, char * &out, int len)
-{
-	if(len>0)
-		crypt(source, out, partner_e, partner_n, len);
-	else crypt(source, out, partner_e, partner_n, len);
-}
-
-void RSA::decrypt(const char * input, char *& out, int len)
-{
-	if(len>0)
-		crypt(input, out, d, n, len);
-	else crypt(input, out, d, n);
-}
-
 void RSA::crypt(const char * given, char * &out, unsigned power, unsigned modul, int len)
 {
 	if(len<=0)
@@ -170,7 +193,7 @@ void RSA::crypt(const char * given, char * &out, unsigned power, unsigned modul,
 		buf[yu] = '\0';
 	}
 	
-	/*int i = (flen)/4;*/ int i = len/4;
+	int i = len/4;
 	unsigned * arr = new unsigned[i];
 	char * hhh = new char[flen+1];
 	for(int k=0; k<i; ++k)
@@ -183,7 +206,7 @@ void RSA::crypt(const char * given, char * &out, unsigned power, unsigned modul,
 }
 
 
-void RSA::getPublicKey(char * str)
+void RSA::getPartnerPublicKey(char * str)
 {
 	partner_e = *((unsigned*)str);
 	partner_n = *((unsigned*)(str+4));

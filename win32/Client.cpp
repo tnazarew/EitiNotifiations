@@ -1,24 +1,35 @@
 #include "Client.h"
-#include <RSA.h>
 #include <iostream>
-#include <rc4.h>
-#include <rapidjson\document.h>
-#include <rapidjson\writer.h>
-#include <rapidjson\stringbuffer.h>
-#include <md5.h>
-#include <sstream>
 
 Client::Client() 
 {
 	RSA::generate();
 }
-bool Client::run()
+bool Client::run(const char * ip_addr, int port)
 {
-	int a;
-	sock.Connect("192.168.1.29",5444);
-	char * input;
+	Socket::Connect(ip_addr, port);
+	second = std::thread::thread(&Client::HandlerLoop, this);
+	first = std::thread::thread(&Client::MainLoop, this);
+	first.join();
+	second.join();
 	
+	return true;
+}
+
+int Client::MainLoop()
+{
+	Encrypt::GetSymKey();
+	Socket::Reconnect();
+	Encrypt::Send(std::string(), 2);
+	std::string msg = Encrypt::Receive();
+	std::cout << "msg: " << msg << "|size = " << msg.size() << std::endl;
+	Socket::Reconnect();
+	std::string sstr = Encrypt::checkDigest(msg);
+	std::cout << "sstr: " << sstr << std::endl;
+	/*char * input;
+	// get symmetric key
 	sock.GetSymKey();
+	// Get messages
 	sock.Reconnect();
 	sock.Send(NULL, 0, 2);
 	sock.ReceiveSymCrypted(input);
@@ -35,7 +46,7 @@ bool Client::run()
 		std::stringstream dig;
 		std::cout << "MD5: " << md5obj << std::endl;
 	}
-	
+	// send crypted hash
 	sock.Reconnect();
 	sock.SendSymCrypted(md5obj.hex_digest(), 32, 3);
 	sock.ReceiveSymCrypted(input);
@@ -45,7 +56,28 @@ bool Client::run()
 	if(doc.HasMember("message"))
 	{
 		std::cout << "Msg: " << doc["message"].GetString() << std::endl;
-	}
+	}*/
 
-	return true;
+	return 0;
+}
+
+int Client::HandlerLoop()
+{
+	if(!SetConsoleCtrlHandler( (PHANDLER_ROUTINE) Client::CtrlHandler, TRUE ) ) 
+	{
+		printf( "\nERROR: Could not set control handler"); 
+		return 1;
+	}
+	return 0;
+}
+
+BOOL Client::CtrlHandler( DWORD fdwCtrlType )
+{
+	if(fdwCtrlType == CTRL_C_EVENT)
+	{
+      printf( "Ctrl-C event\n\n" );
+	  
+      return( TRUE );
+	}
+	return FALSE;
 }

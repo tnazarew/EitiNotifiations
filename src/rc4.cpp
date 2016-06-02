@@ -22,6 +22,7 @@ void RC4::encrypt(const char * ByteInput, char * pwd, char* &ByteOutput, int len
 	}
 	int len2;
 	if(length<=0) len2 = (int)strlen((char *)ByteInput);
+	else len2 = length;
 	//temp = new unsigned char [ (int)strlen((char *)ByteInput)  + 1 ] ;
 	temp = new char[  len2 + 1 ];
 	i=j=0;
@@ -61,6 +62,7 @@ std::string RC4::encryptS(const char * ByteInput, char * pwd, int length)
 	}
 	int len2;
 	if(length<=0) len2 = (int)strlen((char *)ByteInput);
+	else len2 = length;
 	temp = new char[len2+1];
 	i=j=0;
 	
@@ -81,7 +83,7 @@ std::string RC4::encryptS(const char * ByteInput, char * pwd, int length)
 	return std::string(temp);
 }
 
-void RC4::encrypt(char * ByteInput, char* &ByteOutput, int len)
+void RC4::encrypt(const char * ByteInput, char* &ByteOutput, int len)
 {
 	RC4::encrypt(ByteInput, key,ByteOutput, len);
 }

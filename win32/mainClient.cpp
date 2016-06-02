@@ -9,8 +9,8 @@ int main(int argc, char *argv[])
 	int a = -1;
 	checkVersion();
 
-	Client client;
-	client.run();
+	//Client client;
+	//client.run("192.168.1.29",5444);
    
 	std::cin>>a;
 	return 0;

@@ -4,6 +4,11 @@
 
 Socket::Socket()
 {
+	iResult = 0;
+	bResult = TRUE;
+	RecvBytes = Flags = BytesTransferred = 0;
+	u_sock = INVALID_SOCKET;
+	ZeroMemory(&AcceptOverlapped, sizeof (WSAOVERLAPPED));
 }
 
 bool Socket::Connect(const char * ip_address, int port)
@@ -31,60 +36,51 @@ bool Socket::Connect(const char * ip_address, int port)
 		std::cin>> a;
 		return false;
 	}
+
+	EventArray[0] = WSACreateEvent();
+    if (EventArray[0] == WSA_INVALID_EVENT) {
+		std::cout << "WSACreateEvent failed with error = " << WSAGetLastError() << std::endl;
+        closesocket(u_sock);
+        WSACleanup();
+        return false;
+    }
+
+	AcceptOverlapped.hEvent = EventArray[0];
+
 	return true;
 }
 
-bool Socket::Send(const char * data, int len, int action)
+int Socket::Send(char * data, int len)
 {
-	int a;
-	char * block  = new char[len+1];
-	*((int*)block) = (len);
-	*((int*)(block+4)) = devID = 0;
-	*((int*)(block+8)) = action;
-
-	if(data != NULL)
-		strcpy(block+12, data);
-	
-	int smsg=send(u_sock,block,len+12,0);
-	std::cout<<"Message send was send." << std::endl;
+	DataBuf.buf = data;
+	DataBuf.len = RecvBytes = len;
+	int smsg = WSASend(u_sock, &DataBuf, 1, &RecvBytes, Flags, &AcceptOverlapped, NULL);
 	if(smsg==SOCKET_ERROR){
 		std::cout<<"Error while sending: "<<WSAGetLastError()<<std::endl;
 		WSACleanup();
 	}
-
-	//delete block;
-	return true;
+	//std::cout << "\nSend: RecvBytes = " << RecvBytes << ", smsg = " << smsg << ", len = " << len+12 << std::endl;
+	return RecvBytes;
 }
 
-bool Socket::Receive(char *& msg)
+int Socket::Receive(char * msg, int len)
 {
-	int msize;
-	char csize[4];
 	FD_SET readSet;
 	FD_ZERO(&readSet);
 	FD_SET(u_sock, &readSet);
-	int get=recv(u_sock,csize,4,0);
-
-	msize = *((int *) csize);;
-	if(msize > 1500) msize = 1500;
-	if(msize < 0) msize = 0;
-	if(get==SOCKET_ERROR){
-		std::cout<<"Error in Receiving: "<<WSAGetLastError()<<std::endl;
-		std::cin>>msize;
-		return false;
-	}
-	if(msize) msg = new char[msize+1];
+	
 	int count = 0;
-	while(count<msize)
+	int get = 0;
+	while(count<len)
 	{
-		get=recv(u_sock,msg+count,msize,0);
+		get=recv(u_sock,msg+count,len,0);
 		if(get == SOCKET_ERROR)
 		{
 			perror("get");
 			return false;
 		}
 		count +=get;
-		if(count >= msize) break;
+		if(count >= len) break;
 		if(select(0,&readSet,NULL,NULL,NULL)==0)
 		{
 			std::cout<<"select timeout: " << WSAGetLastError() << std::endl;
@@ -93,11 +89,10 @@ bool Socket::Receive(char *& msg)
 		
 	}
 
-	msg[msize] = '\0';
-	return true;
+	return count;
 }
 
-bool Socket::SendSymCrypted(char * data, int len, int action)
+/*bool Socket::SendSymCrypted(char * data, int len, int action)
 {
 	char * output;
 	sym.encrypt(data, output);
@@ -110,7 +105,7 @@ bool Socket::ReceiveSymCrypted(char *& input)
 	if(!Receive(input)) return false;
 	sym.encrypt(input, input);
 	return true;
-}
+}*/
 
 bool Socket::Reconnect()
 {
@@ -134,7 +129,7 @@ bool Socket::Reconnect()
 	return true;
 }
 
-bool Socket::GetSymKey()
+/*bool Socket::GetSymKey()
 {
 	char key[8];
 	char * input;
@@ -148,7 +143,7 @@ bool Socket::GetSymKey()
 	delete input;
 	delete key1;
 	return true;
-}
+}*/
 
 bool checkVersion(void)
 {
