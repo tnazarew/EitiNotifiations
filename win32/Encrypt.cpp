@@ -6,7 +6,7 @@
 #include <rapidjson\stringbuffer.h>
 Encrypt::Encrypt()
 {
-	sym.key = NULL;
+	//sym.key = NULL;
 	RSA::generate();
 }
 
@@ -20,7 +20,7 @@ bool Encrypt::GetSymKey()
 	if(!TransportLayer::Receive(input)) return false;
 	RSA::decrypt(input, key1, 8);
 	sym.init(key1);
-	std::cout << "RC4 key = " << sym.key << std::endl;
+	//std::cout << "RC4 key = " << sym.key << std::endl;
 	delete input;
 	delete key1;
 	return true;
@@ -29,7 +29,7 @@ bool Encrypt::GetSymKey()
 bool Encrypt::Send(std::string msg, int action)
 {
 	char * output;
-	sym.encrypt(msg.c_str(), output, msg.length());
+	sym.encrypt(msg.c_str(), output);
 	if(!TransportLayer::Send(output, msg.length(), action)) return false;
 	//delete output;
 	return true;
@@ -41,11 +41,11 @@ std::string Encrypt::Receive()
 	int size= 0;
 	if(!(size = TransportLayer::Receive(input))) return std::string();
 	std::cout << "enc input: " << input << "|size = " << size << std::endl;
-	sym.encrypt(input, input, size);
-	std::cout << "enc input: " << input << "|" << std::endl;
-	std::string in(input);
+	std::string temp = sym.decrypt(input, size);
+	std::cout << "enc input: " << temp << "|" << std::endl;
+	//std::string in(input);
 	delete input;
-	return in;
+	return temp;
 }
 
 std::string Encrypt::checkDigest(std::string& msg)

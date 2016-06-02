@@ -64,8 +64,8 @@ void RSA::pushPublicKey(char * out)
 	*((unsigned*)out) = e;
 	*((unsigned*)(out+4)) = n;
 	/*
-	int temp_e = encryptWithPPKey(e);
-	int temp_n = encryptWithPPKey(n);
+	int temp_e = encryptWithPPKeyU(e);
+	int temp_n = encryptWithPPKeyU(n);
 	*((unsigned*)out) = temp_e;
 	*((unsigned*)(out+4)) = temp_n;
 	*/
@@ -215,15 +215,14 @@ void RSA::crypt(const char * given, char * &out, unsigned power, unsigned modul,
 		buf[yu] = '\0';
 	}
 	
-	int i = len/4;
+	int i = flen/4;
 	unsigned * arr = new unsigned[i];
-	char * hhh = new char[flen+1];
+	char * hhh = new char[flen];
 	for(int k=0; k<i; ++k)
 	{
 		arr[k] = *((unsigned*)(given+k*4));
 		*((unsigned*)(hhh+k*4)) = ModExp(arr[k], power, modul);
 	}
-	hhh[flen] = '\0';
 	out = hhh;
 }
 

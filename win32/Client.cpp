@@ -19,13 +19,13 @@ bool Client::run(const char * ip_addr, int port)
 int Client::MainLoop()
 {
 	Encrypt::GetSymKey();
-	Socket::Reconnect();
+	/*Socket::Reconnect();
 	Encrypt::Send(std::string(), 2);
 	std::string msg = Encrypt::Receive();
 	std::cout << "msg: " << msg << "|size = " << msg.size() << std::endl;
 	Socket::Reconnect();
 	std::string sstr = Encrypt::checkDigest(msg);
-	std::cout << "sstr: " << sstr << std::endl;
+	std::cout << "sstr: " << sstr << std::endl;*/
 
 	/*char * input;
 	// get symmetric key

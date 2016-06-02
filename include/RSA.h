@@ -1,6 +1,18 @@
 ﻿#ifndef RSA_H
 #define RSA_H
-// Szyfrowanie asymetryczne (algorytm RSA)
+/**********************************************************
+ * Server usage:
+ * 1. Create instance of RSA
+ * 2. Get client public key via getPartnerPublicKey() method
+ * 3. Encrypt message via encryptWithPPKey() mehod
+ * 4. Send encrypted message
+ * Client usage:
+ * 1. Generate RSA key pair via generate() method
+ * 2. Convert to string public key via pushPublicKey() method
+ * 3. Send Public key to server
+ * 4. Get encrypted message; decrypt it by decrypt() method
+ ***********************************************************/
+
 	class RSA
 	{
 			static const unsigned long long n_lower_bound = 3500000000ULL;
@@ -41,7 +53,6 @@
 			// szyfruj kluczem partnera
 			void encryptWithPPKey(const char * source, char * &out, int len=0);
 			unsigned encryptWithPPKey(unsigned source);
-			// 
 			static void pushPublicKey(char * out);
 			void getPartnerPublicKey(char * in);
 		
