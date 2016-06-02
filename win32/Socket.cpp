@@ -54,8 +54,9 @@ int Socket::Send(char * data, int len)
 {
 	DataBuf.buf = data;
 	DataBuf.len = RecvBytes = len;
-	int smsg = WSASend(u_sock, &DataBuf, 1, &RecvBytes, Flags, &AcceptOverlapped, NULL);
-	if(smsg==SOCKET_ERROR){
+	iResult = WSASend(u_sock, &DataBuf, 1, &RecvBytes, Flags, &AcceptOverlapped, NULL);
+	//iResult = WSASend(u_sock, &DataBuf, 1, NULL, Flags, &AcceptOverlapped, NULL);
+	if(iResult==SOCKET_ERROR){
 		std::cout<<"Error while sending: "<<WSAGetLastError()<<std::endl;
 		WSACleanup();
 	}
@@ -90,6 +91,29 @@ int Socket::Receive(char * msg, int len)
 	}
 
 	return count;
+	/*DataBuf.buf = msg;
+	DataBuf.len = RecvBytes = len;
+	//iResult = WSARecv(u_sock, &DataBuf, 1, &RecvBytes, &Flags, &AcceptOverlapped, NULL);
+	iResult = WSARecv(u_sock, &DataBuf, 1, NULL, &Flags, &AcceptOverlapped, NULL);
+	//if(iResult==SOCKET_ERROR && iResult!=WSA_IO_PENDING){
+	if(iResult==SOCKET_ERROR){
+		std::cout<<"Error while sending: "<<WSAGetLastError()<<std::endl;
+		WSACleanup();
+	}
+	// Wait for the overlapped I/O call to complete
+	Index = WSAWaitForMultipleEvents(EventTotal, EventArray, FALSE, WSA_INFINITE, FALSE);
+	// Reset the signaled event
+	bResult = WSAResetEvent(EventArray[Index - WSA_WAIT_EVENT_0]);
+    if (bResult == FALSE) {
+        wprintf(L"WSAResetEvent failed with error = %d\n", WSAGetLastError());
+    }
+	// Determine the status of the overlapped event
+    bResult = WSAGetOverlappedResult(u_sock, &AcceptOverlapped, &BytesTransferred, FALSE, &Flags);
+    if (bResult == FALSE) {
+        wprintf(L"WSAGetOverlappedResult failed with error = %d\n", WSAGetLastError());
+    }
+	std::cout << "Bytes transfred: " << BytesTransferred << std::cout;
+	return BytesTransferred;*/
 }
 
 /*bool Socket::SendSymCrypted(char * data, int len, int action)

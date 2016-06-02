@@ -26,6 +26,7 @@ int Client::MainLoop()
 	Socket::Reconnect();
 	std::string sstr = Encrypt::checkDigest(msg);
 	std::cout << "sstr: " << sstr << std::endl;
+
 	/*char * input;
 	// get symmetric key
 	sock.GetSymKey();

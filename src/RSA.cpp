@@ -49,6 +49,28 @@ void RSA::encryptWithPPKey(const char * source, char * &output, int len)
 	crypt(source, output, partner_e, partner_n, len);
 }
 
+void RSA::getPartnerPublicKey(char * str)
+{
+	partner_e = *((unsigned*)str);
+	partner_n = *((unsigned*)(str+4));
+	/*
+	partner_e = decrypt(partner_e);
+	partner_n = decrypt(partner_n);
+	*/
+}
+
+void RSA::pushPublicKey(char * out)
+{
+	*((unsigned*)out) = e;
+	*((unsigned*)(out+4)) = n;
+	/*
+	int temp_e = encryptWithPPKey(e);
+	int temp_n = encryptWithPPKey(n);
+	*((unsigned*)out) = temp_e;
+	*((unsigned*)(out+4)) = temp_n;
+	*/
+}
+
 void RSA::generate()
 {
 /*
@@ -204,22 +226,6 @@ void RSA::crypt(const char * given, char * &out, unsigned power, unsigned modul,
 	hhh[flen] = '\0';
 	out = hhh;
 }
-
-
-void RSA::getPartnerPublicKey(char * str)
-{
-	partner_e = *((unsigned*)str);
-	partner_n = *((unsigned*)(str+4));
-}
-
-void RSA::pushPublicKey(char * out)
-{
-	*((unsigned*)out) = e;
-	*((unsigned*)(out+4)) = n;
-}
-
-
-
 
 unsigned RSA::getInverse(unsigned b, unsigned m)
 {
