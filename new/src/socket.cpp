@@ -4,9 +4,8 @@
 #include <socket.h>
 #include <unistd.h>
 #include <string.h>
-
 #include <actions.h>
-
+#include <iostream>
 
 namespace EitiNotifications
 {
@@ -100,7 +99,7 @@ namespace EitiNotifications
 
 
 
-    int Socket::readMes(char*& mes, int& mes_size, int& devID, int& action)
+    int Socket::readMes(char* &mes, int& mes_size, int& devID, int& action)
     {
         const int size = 7;
         int long bytes;
@@ -112,14 +111,14 @@ namespace EitiNotifications
             mes_size = *((int *) header);
             devID = *((int *) (header + 4));
             action = *((int *) (header + 8));
-			if(mes_size<0) mes_size = 1;
+	    std::cout << "mes_size = " << mes_size <<std::endl;
+	    std::cout << "devID = " << devID <<std::endl;
+	    std::cout << "action = " << action <<std::endl;
+			if(mes_size<0) mes_size = 0;
 			if(mes_size>1500) mes_size = 1500;
-		std::cout << "mes_size = " << mes_size << std::endl;
-		std::cout << "devID = " << devID << std::endl;
-		std::cout << "action = " << action << std::endl;
-            mes = new char[mes_size];
+	    if(mes_size)  mes = new char[mes_size];
             int offset = 0;
-            do
+            while (offset < mes_size)
             {
                 bytes = read(socket_descriptor_, mes + offset, size);
                 offset += bytes;
@@ -127,7 +126,7 @@ namespace EitiNotifications
                     perror("READ");
                     return -1;
                 }
-            } while (offset < mes_size);
+            } 
             return 0;
         }
         else

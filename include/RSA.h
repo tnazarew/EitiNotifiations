@@ -1,9 +1,20 @@
 ﻿#ifndef RSA_H
 #define RSA_H
-// Szyfrowanie asymetryczne (algorytm RSA)
+/**********************************************************
+ * Server usage:
+ * 1. Create instance of RSA
+ * 2. Get client public key via getPartnerPublicKey() method
+ * 3. Encrypt message via encryptWithPPKey() mehod
+ * 4. Send encrypted message
+ * Client usage:
+ * 1. Generate RSA key pair via generate() method
+ * 2. Convert to string public key via pushPublicKey() method
+ * 3. Send Public key to server
+ * 4. Get encrypted message; decrypt it by decrypt() method
+ ***********************************************************/
+
 	class RSA
 	{
-	public:
 			static const unsigned long long n_lower_bound = 3500000000ULL;
 			static const unsigned long long n_upper_bound = 4294000000ULL;
 			static const unsigned pq_lower_bound = 20000U;
@@ -13,7 +24,6 @@
 			static unsigned e; // składowa klucza publicznego
 			static unsigned d; // składowa klucza prywatnego
 			static unsigned n; // key module
-			static bool keyGenerated;
 
 			unsigned partner_e;
 			unsigned partner_n;
@@ -28,29 +38,23 @@
 			static unsigned ModExp(unsigned base, unsigned exponent, unsigned mod);
 			// Miller Rabin test
 			static bool is_prime(unsigned prime);
-			// 
-			void crypt(const char * given, char * &out, unsigned power, unsigned modul);
-			//void crypt(unsigned sorce, char * &out, unsigned power, unsigned modul);
-			//void crypt1(const char * source, char * out, unsigned power, unsigned modul, int len); // length in bytes
-			//void crypt1(unsigned sorce, char * out, unsigned power, unsigned modul);
+			// szyfrowanie
+			static void crypt(const char * given, char * &out, unsigned power, unsigned modul, int len);
 		
 		public:
 			RSA();
-			static bool isKeyGenerated();
-			// generowanie klucza publicznego i prywatnego
 			static void generate();
-			// szyfrowanie 
+			// szyfrowanie kluczem publicznym (para (e,n))
+			static void encrypt(const char * source, char * &out, int len=0);
 			static unsigned encrypt(unsigned source);
-			static unsigned decrypt(char * source);
+			//szyfrowanie kluczem prywatnym (para (d,n))
+			static void decrypt(const char * source, char * &out, int len=0);
 			static unsigned decrypt(unsigned source);
 			// szyfruj kluczem partnera
-			void encryptWithPPKey(const char * source, char * &out);
-			//
-			void decrypt(char * source, char * &out);
-			// 
-			void getPublicKey(char ee[8]);
-			// 
+			void encryptWithPPKey(const char * source, char * &out, int len=0);
+			unsigned encryptWithPPKey(unsigned source);
 			static void pushPublicKey(char * out);
+			void getPartnerPublicKey(char * in);
 		
 
 	};

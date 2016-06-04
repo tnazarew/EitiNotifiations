@@ -2,3 +2,9 @@
 build/
 *~
 include/rapidjson/
+*.vcxproj
+Debug/
+win32/Debug/
+*qt
+win32/GeneratedFiles/
+*.*sdf

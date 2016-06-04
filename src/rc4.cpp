@@ -1,13 +1,45 @@
 #include <string.h>
 #include <string>
-#include "rc4.h"
+#include <rc4.h>
 
-void RC4::encrypt(const char * ByteInput, char * pwd, char* &ByteOutput)
+RC4::RC4() : key(NULL) {}
+
+char * RC4::encrypt(std::string msg, const char * givenKey)
+{
+	char * BinaryOutput;
+	encrypt(msg.c_str(), givenKey, BinaryOutput, msg.size());
+	return BinaryOutput;
+}
+char * RC4::encrypt(std::string msg)
+{
+	char * BinaryOutput;
+	encrypt(msg.c_str(), key, BinaryOutput, msg.size());
+	return BinaryOutput;
+}
+
+std::string RC4::decrypt(const char * BinaryInput, const char * givenKey,int length)
+{
+	char * CharOutput;
+	encrypt(BinaryInput, givenKey, CharOutput, (size_t)length);
+	std::string temp(CharOutput);
+	delete CharOutput;
+	return temp;
+}
+std::string RC4::decrypt(const char * BinaryInput, int length)
+{
+	char * CharOutput;
+	encrypt(BinaryInput, key, CharOutput, (size_t)length);
+	std::string temp(CharOutput);
+	delete CharOutput;
+	return temp;
+}
+
+void RC4::encrypt(const char * ByteInput, const char * pwd, char* &ByteOutput, size_t length)
 {
 	//unsigned char * temp;
 	char * temp;
 	int i,j=0,t,tmp,tmp2,s[256], k[256];
-	int len = strlen(pwd);
+	int len = KEY_SIZE;
 	for (tmp=0;tmp<256;tmp++)
 	{
 		s[tmp]=tmp;
@@ -20,9 +52,11 @@ void RC4::encrypt(const char * ByteInput, char * pwd, char* &ByteOutput)
 		s[i]=s[j];
 		s[j]=tmp;
 	}
-	int len2 = (int)strlen((char *)ByteInput);
-	//temp = new unsigned char [ (int)strlen((char *)ByteInput)  + 1 ] ;
-	temp = new char[  len2 + 1 ];
+	int len2;
+	if(length<=0) len2 = (int)strlen((char *)ByteInput);
+	else len2 = length;
+	
+	temp = new char[len2+1];
 	i=j=0;
 	for (tmp=0;tmp<len2;tmp++)
 	{
@@ -41,11 +75,11 @@ void RC4::encrypt(const char * ByteInput, char * pwd, char* &ByteOutput)
 	ByteOutput=temp;
 }
 
-std::string RC4::encrypt(const char * ByteInput, char * pwd)
+/*std::string RC4::encrypt(const char * ByteInput, char * pwd, int length)
 {
 	char * temp;
 	int i,j=0,t,tmp,tmp2,s[256], k[256];
-	int len = strlen(pwd);
+	int len = KEY_SIZE;
 	for (tmp=0;tmp<256;tmp++)
 	{
 		s[tmp]=tmp;
@@ -58,7 +92,9 @@ std::string RC4::encrypt(const char * ByteInput, char * pwd)
 		s[i]=s[j];
 		s[j]=tmp;
 	}
-	int len2 = (int)strlen((char *)ByteInput);
+	int len2;
+	if(length<=0) len2 = (int)strlen((char *)ByteInput);
+	else len2 = length;
 	temp = new char[len2+1];
 	i=j=0;
 	
@@ -77,16 +113,17 @@ std::string RC4::encrypt(const char * ByteInput, char * pwd)
 	}
 	temp[tmp] = '\0';
 	return std::string(temp);
-}
+}*/
 
-void RC4::encrypt(const char * ByteInput, char* &ByteOutput)
+/*void RC4::encrypt(const char * ByteInput, char* &ByteOutput, int len)
 {
-	encrypt(ByteInput, key,ByteOutput);
-}
+	RC4::encrypt(ByteInput, key,ByteOutput, len);
+}*/
 
 bool RC4::init(const char * str)
 {
-	key = new char[ (int)strlen((char *)str)];
+	//key = new char[ (int)strlen((char *)str)];
+	key = new char[KEY_SIZE];
 	strcpy(key, str);
 	return true;
 }
