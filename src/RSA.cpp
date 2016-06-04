@@ -1,86 +1,50 @@
 ﻿#include <RSA.h>
-#include <Util.h>
-#include <string.h>
 #include <random>
 #include <cstdlib>
-#include <iostream>
 
 unsigned RSA::e; // składowa klucza publicznego
 unsigned RSA::d; // składowa klucza prywatnego
 unsigned RSA::n;
 
-RSA::RSA()
+unsigned RSA::encrypt(unsigned given, unsigned ee, unsigned nn)
 {
-/*
-#ifdef CLIENT
-	partner_n = 4294894073U;
-	partner_e = 981967781U;
-#endif
-*/
+	return ModExp(given,ee,nn);
 }
 
-unsigned RSA::encrypt(unsigned given)
+unsigned RSA::decrypt(unsigned given, unsigned dd, unsigned nn)
 {
-	return ModExp(given,e,n);
+	return ModExp(given,dd,nn);
 }
 
-unsigned RSA::decrypt(unsigned given)
+int RSA::encrypt(std::string msg, char *& output, unsigned ee, unsigned nn)
 {
-	return ModExp(given,d,n);
+	return crypt(msg.c_str(), output, ee, nn, msg.size());
 }
 
-unsigned RSA::encryptWithPPKey(unsigned given)
+std::string RSA::decrypt(const char * input, int length, unsigned dd, unsigned nn)
 {
-	return ModExp(given,partner_e,partner_n);
+	char * output;
+	crypt(input, output, dd, nn, length);
+	std::string temp(output);
+	delete output;
+	return temp;
 }
 
-void RSA::encrypt(const char * input, char *& output, int len)
+void RSA::getPublicKey(unsigned & ee, unsigned & nn)
 {
-	crypt(input, output, e, n, len);
+	ee = e;
+	nn = n;
 }
 
-void RSA::decrypt(const char * input, char *& output, int len)
+void RSA::setNewKey(unsigned ee, unsigned dd, unsigned nn)
 {
-	crypt(input, output, d, n, len);
+	e = ee;
+	d = dd;
+	n = nn;
 }
 
-void RSA::encryptWithPPKey(const char * source, char * &output, int len)
+void RSA::setNewKey()
 {
-	crypt(source, output, partner_e, partner_n, len);
-}
-
-void RSA::getPartnerPublicKey(char * str)
-{
-	partner_e = *((unsigned*)str);
-	partner_n = *((unsigned*)(str+4));
-	/*
-	partner_e = decrypt(partner_e);
-	partner_n = decrypt(partner_n);
-	*/
-}
-
-void RSA::pushPublicKey(char * out)
-{
-	*((unsigned*)out) = e;
-	*((unsigned*)(out+4)) = n;
-	/*
-	int temp_e = encryptWithPPKeyU(e);
-	int temp_n = encryptWithPPKeyU(n);
-	*((unsigned*)out) = temp_e;
-	*((unsigned*)(out+4)) = temp_n;
-	*/
-}
-
-void RSA::generate()
-{
-/*
-#ifndef CLIENT
-	n = 4294894073U;
-	e = 981967781U;
-	d = 2245171601U;
-	return;
-#endif 
-*/
 	while(1){
 		unsigned p, q = 1;
 		unsigned long long mul;
@@ -198,7 +162,7 @@ bool RSA::is_prime(unsigned n)
 	return true;
 }
 
-void RSA::crypt(const char * given, char * &out, unsigned power, unsigned modul, int len)
+int RSA::crypt(const char * given, char * &out, unsigned power, unsigned modul, int len)
 {
 	if(len<=0)
 		len = strlen(given);
@@ -224,6 +188,7 @@ void RSA::crypt(const char * given, char * &out, unsigned power, unsigned modul,
 		*((unsigned*)(hhh+k*4)) = ModExp(arr[k], power, modul);
 	}
 	out = hhh;
+	return flen;
 }
 
 unsigned RSA::getInverse(unsigned b, unsigned m)

@@ -3,7 +3,6 @@
 
 Client::Client() 
 {
-	RSA::generate();
 }
 bool Client::run(const char * ip_addr, int port)
 {

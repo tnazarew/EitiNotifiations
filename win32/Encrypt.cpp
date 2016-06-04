@@ -7,7 +7,7 @@
 Encrypt::Encrypt()
 {
 	//sym.key = NULL;
-	RSA::generate();
+	RSA::setNewKey();
 }
 
 bool Encrypt::GetSymKey()
@@ -15,10 +15,10 @@ bool Encrypt::GetSymKey()
 	char key[8];
 	char * input;
 	char * key1;
-	RSA::pushPublicKey(key);
+	//RSA::pushPublicKey(key);
 	if(!TransportLayer::Send(key,8, 1)) return false;
 	if(!TransportLayer::Receive(input)) return false;
-	RSA::decrypt(input, key1, 8);
+	//RSA::decrypt(input, key1, 8);
 	sym.init(key1);
 	//std::cout << "RC4 key = " << sym.key << std::endl;
 	delete input;
