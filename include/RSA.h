@@ -12,6 +12,9 @@
  * 3. Send Public key to server
  * 4. Get encrypted message; decrypt it by decrypt() method
  ***********************************************************/
+#include <string>
+namespace EitiNotifications
+{
 
 	class RSA
 	{
@@ -25,9 +28,9 @@
 			static unsigned d; // składowa klucza prywatnego
 			static unsigned n; // key module
 
-			unsigned partner_e;
-			unsigned partner_n;
-				
+			//unsigned partner_e;
+			//unsigned partner_n;
+
 			// Sprawdza czy NWD dla liczb a i b jest równy 1
 			static bool gcd_1(unsigned a, unsigned b);
 			// obliczenie liczby odwrotnej dla liczby e w pierścieniu ℕϕ(n)
@@ -39,23 +42,23 @@
 			// Miller Rabin test
 			static bool is_prime(unsigned prime);
 			// szyfrowanie
-			static void crypt(const char * given, char * &out, unsigned power, unsigned modul, int len);
-		
+			static int crypt(const char * given, char * &out, unsigned power, unsigned modul, int len);
+
 		public:
 			RSA();
-			static void generate();
-			// szyfrowanie kluczem publicznym (para (e,n))
-			static void encrypt(const char * source, char * &out, int len=0);
-			static unsigned encrypt(unsigned source);
-			//szyfrowanie kluczem prywatnym (para (d,n))
-			static void decrypt(const char * source, char * &out, int len=0);
-			static unsigned decrypt(unsigned source);
-			// szyfruj kluczem partnera
-			void encryptWithPPKey(const char * source, char * &out, int len=0);
-			unsigned encryptWithPPKey(unsigned source);
-			static void pushPublicKey(char * out);
-			void getPartnerPublicKey(char * in);
-		
+			// preffered: e = 981967781U, d = 2245171601U, n = 4294894073U
+			static void setNewKey(unsigned ee, unsigned dd, unsigned nn);
+			static void setNewKey(); // for generating some random key
+			// may be some padding; returns size of encrypted data
+			static int encrypt(std::string msg, char *& out, unsigned ee=e, unsigned nn = n);
+			// set length to 0 to automatically determine size of input data (do not use this feature!!!)
+			static std::string decrypt(const char * BinaryInput, int length, unsigned dd=d, unsigned nn=n);
 
+			static unsigned encrypt(unsigned given, unsigned ee=e, unsigned nn=n);
+			static unsigned decrypt(unsigned given, unsigned ee=d, unsigned nn=n);
+
+			static void getPublicKey(unsigned & ee, unsigned & nn);
 	};
+
+}
 #endif // RSA_H

@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <actions.h>
+
 
 
 namespace EitiNotifications
@@ -114,9 +114,9 @@ namespace EitiNotifications
             action = *((int *) (header + 8));
 			if(mes_size<0) mes_size = 1;
 			if(mes_size>1500) mes_size = 1500;
-		std::cout << "mes_size = " << mes_size << std::endl;
-		std::cout << "devID = " << devID << std::endl;
-		std::cout << "action = " << action << std::endl;
+            std::cout << "mes_size = " << mes_size << std::endl;
+            std::cout << "devID = " << devID << std::endl;
+            std::cout << "action = " << action << std::endl;
             mes = new char[mes_size];
             int offset = 0;
             do
@@ -137,7 +137,7 @@ namespace EitiNotifications
         }
     }
 
-    int Socket::writeMes(const char* mes, const int& size)
+    int Socket::writeMes(const char* mes, const int size, const int devid)
     {
         char *buf;
         buf = new char[4+size];
@@ -145,6 +145,8 @@ namespace EitiNotifications
         memcpy(buf+4, mes, (size_t)size);
         send(socket_descriptor_, buf, (size_t)size+4, 0);
     }
+
+
 
 
 }
