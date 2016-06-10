@@ -13,3 +13,4 @@ Package containig library for sending notifications from server to client.
 4. `cmake ..`
 
 5. `make`
+
