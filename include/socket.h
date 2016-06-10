@@ -39,8 +39,8 @@ namespace EitiNotifications
         void setPort();
         void connect(int, std::string);
         int readMes(char *&, int&, int&, int&);
-        int writeMes(const char *, const int, const int devid=0);
-        int writeHeadlessMes(const char* mes, const int size);
+        int writeMes(const char *, const int);
+
         bool acceptSocket(ClientSocket*&);
         void closeSocket();
         void closeSocket(int);

@@ -10,6 +10,8 @@
 
 namespace EitiNotifications
 {
+    Security Server::security_ = Security();
+
     Server::Server()
     {
         main_thread_ = true;
@@ -23,8 +25,6 @@ namespace EitiNotifications
             perror("Destructor is called");
             delete main_socket_;
         }
-
-
     }
 
     Server::Server(const Server &s)
@@ -66,14 +66,11 @@ namespace EitiNotifications
                 case REGISTRATION_REQUEST:
                     registerUser(mes, size, listener);
                     break;
-                case CLIENT_DATA:
-                    clientData();
-                    break;
                 case LOGIN_REQUEST:
                     loginUser(mes, size, listener);
                     break;
                 case MESSAGE_REQUEST:
-                    messageRequest();
+                    messageRequest(size, devID, mes, listener);
                     break;
                 case MESSAGE_RECIVED:
                     messageRecived();
@@ -94,7 +91,11 @@ namespace EitiNotifications
     void Server::getConfig(std::vector<std::string> &conf)
     {
         conf.push_back(std::string("127.0.0.1"));
-        conf.push_back(std::string("5445"));
+        std::string port;
+        std::cout << "set port: ";
+        std::cin >> port;
+        conf.push_back(port);
+        std::cout << port << std::endl;
 
     }
 
@@ -110,25 +111,30 @@ namespace EitiNotifications
 
     void Server::registerUser(char *enc_mes, int size, Socket *listener)
     {
+        printHex(enc_mes, size);
         char *dec = security_.decryptAsym(enc_mes, size);
         Json::Value root;
         Json::Reader reader;
-        bool parsingSuccessful = reader.parse(dec, root);     //parse process
+        std::cout << dec << std::endl;
+        printHex(dec, size);
+        bool parsingSuccessful = reader.parse(dec, root);
         if (!parsingSuccessful)
             std::cout << "Failed to parse" << reader.getFormattedErrorMessages();
 
-        if(!exist())
+        if(parsingSuccessful)
         {
             char *session_key = new char[8];
             security_.generateSessionKey(session_key);
             int did = security_.getDevid();
-            security_.addDevice(did, RC4(session_key));
-
-            sendSuccessLogReg(listener, root, session_key, did);
+            if(!security_.isLogged(did))
+            {
+                security_.addDevice(did, session_key);
+                sendSuccessLogReg(listener,root,session_key,did);
+            }
         }
         else
         {
-            sendFailLogReg(listener, root);
+            sendFailLogReg(listener, root.asString());
         }
 
 
@@ -147,30 +153,33 @@ namespace EitiNotifications
     {
         unsigned int p_e;
         unsigned int p_n;
+
         getPublicKey(root, p_e, p_n);
         std::cout << p_e << " " << p_n << std::endl;
-        std::vector<char *> res;
-        res.resize(3);
-        std::string temp(session_key);
-        std::string s = temp.substr(0, 4);
-        std::vector<int> sizes;
-        sizes.push_back(security_.encryptAsym(p_e, p_n, s, res[0]));
-        s = temp.substr(4, 4);
-        sizes.push_back(security_.encryptAsym(p_e, p_n, s, res[1]));
-        unsigned int enc_did = security_.encryptAsym(did, p_e, p_n);
 
-        char *mes = new char[12];
-        *(unsigned *) mes = 12;
-        *(unsigned *) (mes ) = *(unsigned *) res[0];
-        *(unsigned *) (mes + 4) = *(unsigned *) res[1];
-        *(unsigned *) (mes + 8) = enc_did;
-        printHex(mes, 12);
-        listener->writeHeadlessMes(mes, 12);
+
+        Json::Value val, json;
+        val["deviceId"] = did;
+        val["sessionKey"] = std::string(session_key);
+
+        json["success"] = true;
+        json["value"] = val;
+        Json::FastWriter fastWriter;
+        std::string output = fastWriter.write(json);
+        int tempsize = output.size()-1;
+        int size = tempsize + ((tempsize%4) ? (4-tempsize%4):0);
+        char* res = security_.encryptAsym(p_e, p_n, output);
+
+
+        printHex(res, size);
+        std::cout << "size: " << size << " input size: " << tempsize << std::endl;
+        listener->writeMes(res, size);
     }
 
 
     void Server::getPublicKey(const Json::Value &root, unsigned int &p_e, unsigned int &p_n) const
     {
+
         Json::Value c_data = root["cipheredData"];
         std::string s1 = c_data["publicKey"].asString();
         std::string s2 = c_data["modulus"].asString();
@@ -200,31 +209,40 @@ namespace EitiNotifications
         bool parsingSuccessful = reader.parse(dec, root);     //parse process
         if (!parsingSuccessful)
             std::cout << "Failed to parse" << reader.getFormattedErrorMessages();
-        if(exist())
+        if(parsingSuccessful)
         {
             char *session_key = new char[8];
             security_.generateSessionKey(session_key);
             int did = security_.getDevid();
-            security_.addDevice(did, RC4(session_key));
+            if(security_.isLogged(did))
+            {
+                security_.addDevice(did, session_key);
+                sendSuccessLogReg(listener, root, session_key, did);
+            }
+            else
+            {
+                sendFailLogReg(listener, root);
 
-            sendSuccessLogReg(listener, root, session_key, did);
+            }
+
+
         }
         else
         {
-            sendFailLogReg(listener, root);
+            std::cout << "bardziej dupa";
         }
 
     }
 
-    void Server::clientData()
+
+
+    void Server::messageRequest(int size, int devid,const char* input, Socket* listener)
     {
 
-    }
+        std::string output;
+        security_.decypherSym(devid, input, size, output );
+        listener->writeMes(input, output.size());
 
-    void Server::messageRequest()
-    {
-        //check if deviceid is in the map
-        // if is, decrypt and send to database, return messages
     }
 
     void Server::messageRecived()

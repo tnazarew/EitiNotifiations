@@ -5,8 +5,8 @@
 #ifndef TIN_SERVER_JSONBUILDER_H
 #define TIN_SERVER_JSONBUILDER_H
 #include <string>
-#include "DatabaseObjects.h"
-#include "json/json.h"
+#include <DatabaseObjects.h>
+#include <json.h>
 #include <vector>
 using std::vector;
 using std::string;

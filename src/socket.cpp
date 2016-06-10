@@ -137,7 +137,7 @@ namespace EitiNotifications
         }
     }
 
-    int Socket::writeMes(const char* mes, const int size, const int devid)
+    int Socket::writeMes(const char* mes, const int size)
     {
         char *buf;
         buf = new char[4+size];

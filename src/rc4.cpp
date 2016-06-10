@@ -7,134 +7,92 @@ namespace EitiNotifications
 	{ }
 	RC4::RC4(char * k)
 	{
+		key = new char[KEY_SIZE];
+		memcpy(key, k, KEY_SIZE);
+    }
+    bool RC4::init(const char * k)
+    {
         key = new char[KEY_SIZE];
-        strcpy(key, k);
+        memcpy(key, k, KEY_SIZE);
     }
 
-	char *RC4::encrypt(std::string msg, const char *givenKey)
+
+	char * RC4::encrypt(std::string msg, const char * givenKey)
 	{
-		char *BinaryOutput;
+		char * BinaryOutput;
 		encrypt(msg.c_str(), givenKey, BinaryOutput, msg.size());
 		return BinaryOutput;
 	}
-
-	char *RC4::encrypt(std::string msg)
+	char * RC4::encrypt(std::string msg)
 	{
-		char *BinaryOutput;
+		char * BinaryOutput;
 		encrypt(msg.c_str(), key, BinaryOutput, msg.size());
 		return BinaryOutput;
 	}
 
-	std::string RC4::decrypt(const char *BinaryInput, const char *givenKey, int length)
+	std::string RC4::decrypt(const char * BinaryInput, const char * givenKey,int length)
 	{
-		char *CharOutput;
-		encrypt(BinaryInput, givenKey, CharOutput, (size_t) length);
+		char * CharOutput;
+		encrypt(BinaryInput, givenKey, CharOutput, (size_t)length);
+		std::string temp(CharOutput);
+		delete CharOutput;
+		return temp;
+	}
+	std::string RC4::decrypt(const char * BinaryInput, int length)
+	{
+		char * CharOutput;
+		encrypt(BinaryInput, key, CharOutput, (size_t)length);
 		std::string temp(CharOutput);
 		delete CharOutput;
 		return temp;
 	}
 
-	std::string RC4::decrypt(const char *BinaryInput, int length)
-	{
-		char *CharOutput;
-		encrypt(BinaryInput, key, CharOutput, (size_t) length);
-		std::string temp(CharOutput);
-		delete CharOutput;
-		return temp;
-	}
-
-	void RC4::encrypt(const char *ByteInput, const char *pwd, char *&ByteOutput, size_t length)
+	void RC4::encrypt(const char * ByteInput, const char * pwd, char* &ByteOutput, size_t length)
 	{
 		//unsigned char * temp;
-		char *temp;
-		int i, j = 0, t, tmp, tmp2, s[256], k[256];
+		char * temp;
+		int i,j=0,t,tmp,tmp2,s[256], k[256];
 		int len = KEY_SIZE;
-		for (tmp = 0; tmp < 256; tmp++)
+		for (tmp=0;tmp<256;tmp++)
 		{
-			s[tmp] = tmp;
-			k[tmp] = pwd[tmp % len];
+			s[tmp]=tmp;
+			k[tmp]=pwd[tmp % len];
 		}
-		for (i = 0; i < 256; i++)
+		for (i=0;i<256;i++)
 		{
-			j = ((unsigned char) (j + s[i] + k[i])) % 256;
-			tmp = s[i];
-			s[i] = s[j];
-			s[j] = tmp;
+			j = ((unsigned char)(j + s[i] + k[i])) % 256;
+			tmp=s[i];
+			s[i]=s[j];
+			s[j]=tmp;
 		}
 		int len2;
-		if (length <= 0) len2 = (int) strlen((char *) ByteInput);
+		if(length<=0) len2 = (int)strlen((char *)ByteInput);
 		else len2 = length;
 
-		temp = new char[len2 + 1];
-		i = j = 0;
-		for (tmp = 0; tmp < len2; tmp++)
+		temp = new char[len2+1];
+		i=j=0;
+		for (tmp=0;tmp<len2;tmp++)
 		{
-			i = ((unsigned char) (i + 1)) % 256;
-			j = ((unsigned char) (j + s[i])) % 256;
-			tmp2 = s[i];
-			s[i] = s[j];
-			s[j] = tmp2;
-			t = ((unsigned char) (s[i] + s[j])) % 256;
-			if (s[t] == ByteInput[tmp])
-				temp[tmp] = ByteInput[tmp];
+			i = ((unsigned char)(i + 1)) % 256;
+			j = ((unsigned char)(j + s[i])) % 256;
+			tmp2=s[i];
+			s[i]=s[j];
+			s[j]=tmp2;
+			t = ((unsigned char)(s[i] + s[j])) % 256;
+			if (s[t]==ByteInput[tmp])
+				temp[tmp]=ByteInput[tmp];
 			else
-				temp[tmp] = s[t] ^ ByteInput[tmp];
+				temp[tmp]=s[t]^ByteInput[tmp];
 		}
-		temp[tmp] = '\0';
-		ByteOutput = temp;
+		temp[tmp]='\0';
+		ByteOutput=temp;
 	}
 
-/*std::string RC4::encrypt(const char * ByteInput, char * pwd, int length)
-{
-	char * temp;
-	int i,j=0,t,tmp,tmp2,s[256], k[256];
-	int len = KEY_SIZE;
-	for (tmp=0;tmp<256;tmp++)
-	{
-		s[tmp]=tmp;
-		k[tmp]=pwd[tmp % len];
-	}
-	for (i=0;i<256;i++)
-	{
-		j = ((unsigned char)(j + s[i] + k[i])) % 256;
-		tmp=s[i];
-		s[i]=s[j];
-		s[j]=tmp;
-	}
-	int len2;
-	if(length<=0) len2 = (int)strlen((char *)ByteInput);
-	else len2 = length;
-	temp = new char[len2+1];
-	i=j=0;
-	
-	for (tmp=0;tmp<len2;tmp++)
-	{
-	    i = ((unsigned char)(i + 1)) % 256;
-        j = ((unsigned char)(j + s[i])) % 256;
-		tmp2=s[i];
-		s[i]=s[j];
-		s[j]=tmp2;
-        t = ((unsigned char)(s[i] + s[j])) % 256;
-		if (s[t]==ByteInput[tmp])
-			temp[tmp]=ByteInput[tmp];
-		else
-			temp[tmp]=s[t]^ByteInput[tmp];
-	}
-	temp[tmp] = '\0';
-	return std::string(temp);
-}*/
 
-/*void RC4::encrypt(const char * ByteInput, char* &ByteOutput, int len)
-{
-	RC4::encrypt(ByteInput, key,ByteOutput, len);
-}*/
 
-	bool RC4::init(const char *str)
+	RC4::~RC4()
 	{
-		//key = new char[ (int)strlen((char *)str)];
-		key = new char[KEY_SIZE];
-		strcpy(key, str);
-		return true;
+		delete key;
 	}
 
 }
